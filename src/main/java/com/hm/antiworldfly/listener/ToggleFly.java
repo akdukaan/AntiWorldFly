@@ -29,39 +29,32 @@ public class ToggleFly implements Listener {
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
 	public void onPlayerCommandPreprocessEvent(PlayerToggleFlightEvent event) {
 		Player player = event.getPlayer();
+		String playerWorld = player.getWorld().getName().toLowerCase();
 
-		if (plugin.isDisabled() || player.hasPermission("antiworldfly.fly." + player.getWorld().getName())) {
-			return;
+		if (player.hasPermission("antiworldfly.fly." + playerWorld)) return;
+
+		if (!this.plugin.isAntiFlyCreative() && player.getGameMode() == GameMode.CREATIVE) return;
+		if (player.getGameMode() == GameMode.SPECTATOR) return;
+
+		if (!plugin.getAntiFlyWorlds().contains(playerWorld)) return;
+
+		// Disable flying.
+		player.setAllowFlight(false);
+		player.getPlayer().setFlying(false);
+		event.setCancelled(true);
+
+		if (plugin.isChatMessage()) {
+			player.sendMessage(plugin.getChatHeader() + plugin.getPluginLang().getString("fly-disabled-chat",
+					"Flying is disabled in this world."));
 		}
 
-		if (!this.plugin.isAntiFlyCreative() && event.getPlayer().getGameMode() == GameMode.CREATIVE
-				|| "SPECTATOR".equals(event.getPlayer().getGameMode().toString())) {
-			return;
-		}
-
-		for (String world : plugin.getAntiFlyWorlds()) {
-			if (event.getPlayer().getWorld().getName().equalsIgnoreCase(world)) {
-				// Disable flying.
-				player.setAllowFlight(false);
-				player.getPlayer().setFlying(false);
-				event.setCancelled(true);
-
-				if (plugin.isChatMessage()) {
-					player.sendMessage(plugin.getChatHeader() + plugin.getPluginLang().getString("fly-disabled-chat",
-							"Flying is disabled in this world."));
-				}
-
-				if (plugin.isTitleMessage()) {
-					try {
-						FancyMessageSender.sendTitle(player,
-								plugin.getPluginLang().getString("fly-disabled-title", "&9AntiWorldFly"),
-								plugin.getPluginLang().getString("fly-disabled-subtitle", "Flying is disabled in this world."));
-					} catch (Exception e) {
-						plugin.getLogger().log(Level.SEVERE, "Errors while trying to display flying disabled title: ",
-								e);
-					}
-				}
-				break;
+		if (plugin.isTitleMessage()) {
+			try {
+				FancyMessageSender.sendTitle(player,
+						plugin.getPluginLang().getString("fly-disabled-title", "&9AntiWorldFly"),
+						plugin.getPluginLang().getString("fly-disabled-subtitle", "Flying is disabled in this world."));
+			} catch (Exception e) {
+				plugin.getLogger().log(Level.SEVERE, "Errors while trying to display flying disabled title: ", e);
 			}
 		}
 	}

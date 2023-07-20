@@ -4,7 +4,6 @@ import com.hm.antiworldfly.AntiWorldFly;
 import com.hm.mcshared.particle.FancyMessageSender;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -30,37 +29,33 @@ public class ToggleGlide implements Listener {
     public void onEntityToggleGlideEvent(EntityToggleGlideEvent event) {
 
         Entity entity = event.getEntity();
-        if (!entity.getType().equals(EntityType.PLAYER)) { return; }
+        if (!(entity instanceof Player)) return;
         Player player = (Player) entity;
 
-        if (plugin.isDisabled() || ! plugin.isElytraDisabled() ||
-                (player.hasPermission("antiworldfly.elytra." + player.getWorld().getName())) ||
-                (! (plugin.isAntiFlyCreative()) && player.getGameMode() == GameMode.CREATIVE)) {
-            return;
+        if (!plugin.isElytraDisabled()) return;
+
+        String playerWorld = player.getWorld().getName();
+        if (player.hasPermission("antiworldfly.elytra." + playerWorld)) return;
+        if (!plugin.isAntiFlyCreative() && player.getGameMode() == GameMode.CREATIVE) return;
+
+        if (!plugin.getAntiFlyWorlds().contains(playerWorld)) return;
+
+        // Disable elytra
+        event.setCancelled(true);
+
+        if (plugin.isChatMessage()) {
+            player.sendMessage(plugin.getChatHeader() + plugin.getPluginLang().getString("elytra-disabled-subtitle",
+                    "Elytras are disabled in this world."));
         }
 
-        for (String world : plugin.getAntiFlyWorlds()) {
-            if (player.getWorld().getName().equalsIgnoreCase(world)) {
-
-                // Disable elytra
-                event.setCancelled(true);
-
-                if (plugin.isChatMessage()) {
-                    player.sendMessage(plugin.getChatHeader() + plugin.getPluginLang().getString("elytra-disabled-subtitle",
-                            "Elytras are disabled in this world."));
-                }
-
-                if (plugin.isTitleMessage()) {
-                    try {FancyMessageSender.sendTitle(player,
-                            plugin.getPluginLang().getString("fly-disabled-title", "&9AntiWorldFly"),
-                            plugin.getPluginLang().getString("elytra-disabled-subtitle", "Elytras are disabled in this world."));
-                    } catch (Exception e) {
-                        plugin.getLogger().log(Level.SEVERE, "Errors while trying to display flying disabled title: ",
-                                e);
-                    }
-                }
-                return;
+        if (plugin.isTitleMessage()) {
+            try {FancyMessageSender.sendTitle(player,
+                    plugin.getPluginLang().getString("fly-disabled-title", "&9AntiWorldFly"),
+                    plugin.getPluginLang().getString("elytra-disabled-subtitle", "Elytras are disabled in this world."));
+            } catch (Exception e) {
+                plugin.getLogger().log(Level.SEVERE, "Errors while trying to display flying disabled title: ", e);
             }
         }
+
     }
 }

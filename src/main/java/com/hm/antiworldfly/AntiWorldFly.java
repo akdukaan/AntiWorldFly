@@ -1,6 +1,7 @@
 package com.hm.antiworldfly;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -247,6 +248,13 @@ public class AntiWorldFly extends JavaPlugin {
 		}
 
 		antiFlyWorlds = config.getList("antiFlyWorlds");
+		if (antiFlyWorlds != null) {
+			List<String> lowercaseAFW = new ArrayList<>();
+			for (String str : antiFlyWorlds) {
+				lowercaseAFW.add(str.toLowerCase());
+			}
+			antiFlyWorlds = lowercaseAFW;
+		}
 		chatMessage = config.getBoolean("chatMessage", true);
 		titleMessage = config.getBoolean("titleMessage", true);
 		antiFlyCreative = config.getBoolean("antiFlyCreative", true);
